@@ -1108,10 +1108,10 @@ const createProduct = createRoute({
       brand: z.string().optional(),
       category: z.string().optional(),
       sku: z.string().optional(),
-      price: z.number().optional(),
-      cost: z.number().optional(),
-      stock: z.number().int().optional(),
-      low_stock_alert: z.number().int().optional(),
+      price: z.number().min(0).optional(),
+      cost: z.number().min(0).optional(),
+      stock: z.number().int().min(0).optional(),
+      low_stock_alert: z.number().int().min(0).optional(),
     }) } } },
   },
   responses: { 201: { description: "Created", content: { "application/json": { schema: z.object({ product: ProductSchema }) } } } },
@@ -1122,7 +1122,7 @@ app.openapi(createProduct, async (c) => {
   const result = await run(
     "INSERT INTO products (name, brand, category, sku, price, cost, stock, low_stock_alert) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
     [body.name, body.brand || "", body.category || "", body.sku || "",
-    body.price || 0, body.cost || 0, body.stock || 0, body.low_stock_alert || 5],
+    body.price ?? 0, body.cost ?? 0, body.stock ?? 0, body.low_stock_alert ?? 5],
   );
   const product = await get<Record<string, unknown>>("SELECT * FROM products WHERE id = ?", [result.lastInsertRowid]);
   return c.json({ product }, 201);
@@ -1138,10 +1138,10 @@ const updateProduct = createRoute({
       brand: z.string().optional(),
       category: z.string().optional(),
       sku: z.string().optional(),
-      price: z.number().optional(),
-      cost: z.number().optional(),
-      stock: z.number().int().optional(),
-      low_stock_alert: z.number().int().optional(),
+      price: z.number().min(0).optional(),
+      cost: z.number().min(0).optional(),
+      stock: z.number().int().min(0).optional(),
+      low_stock_alert: z.number().int().min(0).optional(),
     }) } } },
   },
   responses: { 200: { description: "Updated", content: { "application/json": { schema: OkSchema } } } },
