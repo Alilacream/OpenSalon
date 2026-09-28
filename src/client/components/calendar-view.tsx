@@ -10,6 +10,7 @@ import { CreateAppointment } from "./create-appointment";
 import { cn } from "@/lib/utils";
 import { packLanes } from "@/lib/overlap";
 import { parseDate, shiftDate, today } from "@/lib/dates";
+import { calendarSlotMinutes, formatCalendarTime } from "@/lib/calendar-slot";
 import { conflictsFrom, describeConflict, type Conflict } from "@/lib/conflicts";
 import { downloadDaySheet } from "@/lib/day-sheet";
 
@@ -61,9 +62,10 @@ function formatHour(h: number): string {
 export function CalendarView() {
   const {
     calendarAppointments, calendarBlocked, calendarDate, setCalendarDate,
-    staffLookup, navigate, deleteBlockedSlot, addBlockedSlot, isAgent, setError,
+    staffLookup, navigate, deleteBlockedSlot, addBlockedSlot, setError,
   } = useApp();
   const [showCreate, setShowCreate] = useState(false);
+  const [draftBooking, setDraftBooking] = useState<{ staffId: number | null; startTime: string } | null>(null);
   const [showBlockForm, setShowBlockForm] = useState(false);
   const [blockStaff, setBlockStaff] = useState("");
   const [blockStart, setBlockStart] = useState("12:00");
@@ -85,6 +87,23 @@ export function CalendarView() {
   const totalMinutes = dayEnd - dayStart;
   const hourHeight = 64;
   const totalHeight = (totalMinutes / 60) * hourHeight;
+
+  const openBlankBooking = () => {
+    setDraftBooking(null);
+    setShowCreate(true);
+  };
+
+  const openSlotBooking = (staffId: number | null, column: HTMLDivElement, clientY: number) => {
+    const rect = column.getBoundingClientRect();
+    const minutes = calendarSlotMinutes(clientY - rect.top, rect.height, dayStart, dayEnd);
+    setDraftBooking({ staffId, startTime: formatCalendarTime(minutes) });
+    setShowCreate(true);
+  };
+
+  const closeBooking = () => {
+    setShowCreate(false);
+    setDraftBooking(null);
+  };
 
   const handleAddBlock = async (allowConflict = false) => {
     if (!blockStaff) return;
@@ -135,7 +154,7 @@ export function CalendarView() {
           <Button variant="outline" size="sm" className="h-11 w-full sm:w-auto" onClick={() => downloadDaySheet(calendarDate, calendarAppointments, calendarBlocked)}>
             <Download className="h-3.5 w-3.5" /> Day Sheet
           </Button>
-          <Button size="sm" className="col-span-2 h-11 w-full sm:w-auto" onClick={() => setShowCreate(true)}>
+          <Button size="sm" className="col-span-2 h-11 w-full sm:w-auto" onClick={openBlankBooking}>
             <Plus className="h-3.5 w-3.5" /> New Booking
           </Button>
         </div>
@@ -181,7 +200,14 @@ export function CalendarView() {
         </Card>
       )}
 
-      {showCreate && <CreateAppointment onClose={() => setShowCreate(false)} defaultDate={calendarDate} />}
+      {showCreate && (
+        <CreateAppointment
+          onClose={closeBooking}
+          defaultDate={calendarDate}
+          defaultStaffId={draftBooking?.staffId}
+          defaultStartTime={draftBooking?.startTime}
+        />
+      )}
 
       <div className="flex min-h-80 min-w-0 flex-1 overflow-auto rounded-lg border bg-card" role="region" aria-label="Daily staff schedule" tabIndex={0}>
         {/* Time gutter */}
@@ -204,7 +230,15 @@ export function CalendarView() {
                   <span className="inline-block h-3 w-3 rounded-full" style={{ backgroundColor: member.color }} />
                   <span className="text-sm font-medium">{member.name}</span>
                 </div>
-                <div className="relative" style={{ height: totalHeight }}>
+                <div
+                  className="relative shrink-0 cursor-crosshair"
+                  style={{ height: totalHeight }}
+                  aria-label={`${member.name}'s schedule; click empty time to create a booking`}
+                  onClick={(event) => {
+                    if ((event.target as HTMLElement).closest("[data-calendar-item]")) return;
+                    openSlotBooking(member.id, event.currentTarget, event.clientY);
+                  }}
+                >
                   {/* Hour lines */}
                   {HOURS.map((h) => (
                     <div
@@ -224,6 +258,7 @@ export function CalendarView() {
                       return (
                         <div
                           key={item.key}
+                          data-calendar-item
                           className="absolute z-10 flex items-center justify-between rounded bg-muted/60 px-2 text-xs text-muted-foreground"
                           style={{ ...lane, top, height: Math.max(height, 20) }}
                         >
@@ -243,6 +278,7 @@ export function CalendarView() {
                     return (
                       <button
                         key={item.key}
+                        data-calendar-item
                         className={cn(
                           "absolute z-20 cursor-pointer overflow-hidden rounded-md border-l-[3px] px-2 py-1 text-left transition-shadow hover:shadow-md",
                         )}
@@ -278,7 +314,15 @@ export function CalendarView() {
                   <span className="inline-block h-3 w-3 rounded-full bg-muted-foreground/40" />
                   <span className="text-sm font-medium text-muted-foreground">Unassigned</span>
                 </div>
-                <div className="relative" style={{ height: totalHeight }}>
+                <div
+                  className="relative shrink-0 cursor-crosshair"
+                  style={{ height: totalHeight }}
+                  aria-label="Unassigned schedule; click empty time to create a booking"
+                  onClick={(event) => {
+                    if ((event.target as HTMLElement).closest("[data-calendar-item]")) return;
+                    openSlotBooking(null, event.currentTarget, event.clientY);
+                  }}
+                >
                   {HOURS.map((h) => (
                     <div key={h} className="absolute left-0 right-0 border-t border-dashed border-border/50" style={{ top: ((h * 60 - dayStart) / totalMinutes) * totalHeight }} />
                   ))}
@@ -289,6 +333,7 @@ export function CalendarView() {
                     return (
                       <button
                         key={item.key}
+                        data-calendar-item
                         className="absolute z-20 cursor-pointer overflow-hidden rounded-md border-l-[3px] border-l-muted-foreground/40 bg-muted/30 px-2 py-1 text-left transition-shadow hover:shadow-md"
                         style={{ ...laneStyle(item.lane, item.lanes), top, height: Math.max(height, 28) }}
                         onClick={() => navigate(`/appointments/${apt.id}`)}
