@@ -43,7 +43,7 @@ OpenSalon is **vertical-agnostic** — configure services, pricing, and staff fo
 - **Client management** — full database with contact info, notes, preferences, and appointment history with services and latest visit notes at a glance
 - **Staff management** — team directory with color coding, titles/roles, activate/deactivate, and appointment counts
 - **Service catalog** — configurable services with duration, price, color, and category grouping
-- **Product inventory** — track retail products with cost/price, stock levels, low stock alerts, brand, and SKU
+- **Product inventory** — add and edit retail products with cost/price, stock levels, low stock alerts, brand, and SKU from desktop or mobile
 - **Multi-service bookings** — select multiple services per appointment with automatic duration and price calculation
 - **Status workflow** — booked → confirmed → in progress → completed (or cancelled/no show)
 - **Activity notes** — timestamped notes on every appointment for internal communication

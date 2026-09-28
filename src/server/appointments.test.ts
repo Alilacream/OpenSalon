@@ -198,6 +198,25 @@ test("client history summarizes services and the latest service note", async (t)
   assert.equal(blankVisit.latest_note, null);
 });
 
+test("products preserve zero thresholds and can be edited without recreation", async (t) => {
+  const { call, db } = await setup(t);
+  const created = await call("POST", "/api/products", {
+    name: "Retail Shampoo", price: 22, cost: 9, stock: 0, low_stock_alert: 0,
+  });
+  assert.equal(created.status, 201);
+  const id = created.body.product.id;
+  const zero = db.prepare("SELECT stock, low_stock_alert FROM products WHERE id = ?").get(id);
+  assert.equal(zero?.stock, 0);
+  assert.equal(zero?.low_stock_alert, 0);
+
+  assert.equal((await call("PUT", `/api/products/${id}`, { stock: 8, price: 24 })).status, 200);
+  const updated = db.prepare("SELECT id, stock, price FROM products WHERE id = ?").get(id);
+  assert.equal(updated?.id, id);
+  assert.equal(updated?.stock, 8);
+  assert.equal(updated?.price, 24);
+  assert.equal((await call("PUT", `/api/products/${id}`, { stock: -1 })).status, 400);
+});
+
 test("invalid times and midnight overflow cannot bypass the guard, even with an override", async (t) => {
   const { create, update, db } = await setup(t);
   for (const start_time of ["", "noon", "09:30garbage", "24:00", "23:30"]) {
