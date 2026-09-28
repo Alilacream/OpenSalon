@@ -14,14 +14,16 @@ interface Props {
   onClose: () => void;
   defaultDate?: string;
   defaultClientId?: number;
+  defaultStaffId?: number | null;
+  defaultStartTime?: string;
 }
 
-export function CreateAppointment({ onClose, defaultDate, defaultClientId }: Props) {
+export function CreateAppointment({ onClose, defaultDate, defaultClientId, defaultStaffId, defaultStartTime }: Props) {
   const { addAppointment, clientLookup, staffLookup, services, setError } = useApp();
   const [clientId, setClientId] = useState(defaultClientId ? String(defaultClientId) : "");
-  const [staffId, setStaffId] = useState("");
+  const [staffId, setStaffId] = useState(defaultStaffId ? String(defaultStaffId) : "");
   const [date, setDate] = useState(defaultDate || today());
-  const [startTime, setStartTime] = useState("09:00");
+  const [startTime, setStartTime] = useState(defaultStartTime || "09:00");
   const [selectedServices, setSelectedServices] = useState<number[]>([]);
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
