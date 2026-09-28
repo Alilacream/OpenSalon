@@ -304,8 +304,8 @@ export function useAppState(isAgent: boolean, navigate: (to: string) => void): A
 
   const updateProduct = useCallback(async (id: number, data: Partial<Product>) => {
     await api("PUT", `/api/products/${id}`, data);
-    await fetchProducts(productsPag, productsSearch);
-  }, [productsPag, productsSearch, fetchProducts]);
+    await Promise.all([fetchProducts(productsPag, productsSearch), fetchStats()]);
+  }, [productsPag, productsSearch, fetchProducts, fetchStats]);
 
   const deleteProduct = useCallback(async (id: number) => {
     await api("DELETE", `/api/products/${id}`);
