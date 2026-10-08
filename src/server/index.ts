@@ -209,18 +209,22 @@ const getStats = createRoute({
   responses: {
     200: {
       description: "Dashboard stats",
-      content: { "application/json": { schema: z.object({
-        appointments: z.number().int(),
-        clients: z.number().int(),
-        staff: z.number().int(),
-        services: z.number().int(),
-        products: z.number().int(),
-        today_appointments: z.number().int(),
-        upcoming_appointments: z.number().int(),
-        completed_appointments: z.number().int(),
-        revenue: z.number().describe("Completed booked service value; retained as revenue for API compatibility, not settled payment revenue"),
-        low_stock_products: z.number().int(),
-      }) } },
+      content: {
+        "application/json": {
+          schema: z.object({
+            appointments: z.number().int(),
+            clients: z.number().int(),
+            staff: z.number().int(),
+            services: z.number().int(),
+            products: z.number().int(),
+            today_appointments: z.number().int(),
+            upcoming_appointments: z.number().int(),
+            completed_appointments: z.number().int(),
+            revenue: z.number().describe("Completed booked service value; retained as revenue for API compatibility, not settled payment revenue"),
+            low_stock_products: z.number().int(),
+          })
+        }
+      },
     },
   },
 });
@@ -322,10 +326,14 @@ const getCalendar = createRoute({
   responses: {
     200: {
       description: "Calendar appointments and blocked slots",
-      content: { "application/json": { schema: z.object({
-        appointments: z.array(AppointmentSchema),
-        blocked_slots: z.array(BlockedSlotSchema),
-      }) } },
+      content: {
+        "application/json": {
+          schema: z.object({
+            appointments: z.array(AppointmentSchema),
+            blocked_slots: z.array(BlockedSlotSchema),
+          })
+        }
+      },
     },
   },
 });
@@ -414,19 +422,25 @@ const createAppointment = createRoute({
   method: "post",
   path: "/api/appointments",
   request: {
-    body: { content: { "application/json": { schema: z.object({
-      client_id: z.number().int(),
-      staff_id: z.number().int().nullable().optional(),
-      scheduled_date: z.string(),
-      start_time: z.string().optional(),
-      notes: z.string().optional(),
-      is_recurring: z.number().int().optional(),
-      recurrence_interval: z.string().optional(),
-      service_ids: z.array(z.number().int()).optional(),
-      allow_conflict: z.boolean().optional().openapi({
-        description: "Book even though the staff member is already busy then. Salons do deliberately overlap (a colour processes while the next client is cut), so this is allowed, but never by accident.",
-      }),
-    }) } } },
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({
+            client_id: z.number().int(),
+            staff_id: z.number().int().nullable().optional(),
+            scheduled_date: z.string(),
+            start_time: z.string().optional(),
+            notes: z.string().optional(),
+            is_recurring: z.number().int().optional(),
+            recurrence_interval: z.string().optional(),
+            service_ids: z.array(z.number().int()).optional(),
+            allow_conflict: z.boolean().optional().openapi({
+              description: "Book even though the staff member is already busy then. Salons do deliberately overlap (a colour processes while the next client is cut), so this is allowed, but never by accident.",
+            }),
+          })
+        }
+      }
+    },
   },
   responses: {
     201: { description: "Created", content: { "application/json": { schema: z.object({ appointment: AppointmentSchema }) } } },
@@ -474,8 +488,8 @@ app.openapi(createAppointment, async (c) => {
     `INSERT INTO appointments (identifier, client_id, staff_id, scheduled_date, start_time, end_time, total_price, notes, is_recurring, recurrence_interval)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [identifier, body.client_id, body.staff_id ?? null, body.scheduled_date,
-    startTime, endTime, totalPrice,
-    body.notes || "", body.is_recurring || 0, body.recurrence_interval || ""],
+      startTime, endTime, totalPrice,
+      body.notes || "", body.is_recurring || 0, body.recurrence_interval || ""],
   );
 
   const aptId = result.lastInsertRowid;
@@ -510,19 +524,25 @@ const updateAppointment = createRoute({
   path: "/api/appointments/{id}",
   request: {
     params: IdParam,
-    body: { content: { "application/json": { schema: z.object({
-      client_id: z.number().int().optional(),
-      staff_id: z.number().int().nullable().optional(),
-      status: z.string().optional(),
-      scheduled_date: z.string().optional(),
-      start_time: z.string().optional(),
-      end_time: z.string().optional(),
-      total_price: z.number().optional(),
-      notes: z.string().optional(),
-      allow_conflict: z.boolean().optional().openapi({
-        description: "Move the appointment even though the staff member is already busy then.",
-      }),
-    }) } } },
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({
+            client_id: z.number().int().optional(),
+            staff_id: z.number().int().nullable().optional(),
+            status: z.string().optional(),
+            scheduled_date: z.string().optional(),
+            start_time: z.string().optional(),
+            end_time: z.string().optional(),
+            total_price: z.number().optional(),
+            notes: z.string().optional(),
+            allow_conflict: z.boolean().optional().openapi({
+              description: "Move the appointment even though the staff member is already busy then.",
+            }),
+          })
+        }
+      }
+    },
   },
   responses: {
     200: { description: "Updated", content: { "application/json": { schema: OkSchema } } },
@@ -736,12 +756,18 @@ const createClient = createRoute({
   method: "post",
   path: "/api/clients",
   request: {
-    body: { content: { "application/json": { schema: z.object({
-      name: z.string(),
-      email: z.string().optional(),
-      phone: z.string().optional(),
-      notes: z.string().optional(),
-    }) } } },
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({
+            name: z.string(),
+            email: z.string().optional(),
+            phone: z.string().optional(),
+            notes: z.string().optional(),
+          })
+        }
+      }
+    },
   },
   responses: { 201: { description: "Created", content: { "application/json": { schema: z.object({ client: ClientSchema }) } } } },
 });
@@ -761,12 +787,18 @@ const updateClient = createRoute({
   path: "/api/clients/{id}",
   request: {
     params: IdParam,
-    body: { content: { "application/json": { schema: z.object({
-      name: z.string().optional(),
-      email: z.string().optional(),
-      phone: z.string().optional(),
-      notes: z.string().optional(),
-    }) } } },
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({
+            name: z.string().optional(),
+            email: z.string().optional(),
+            phone: z.string().optional(),
+            notes: z.string().optional(),
+          })
+        }
+      }
+    },
   },
   responses: { 200: { description: "Updated", content: { "application/json": { schema: OkSchema } } } },
 });
@@ -846,13 +878,19 @@ const createStaff = createRoute({
   method: "post",
   path: "/api/staff",
   request: {
-    body: { content: { "application/json": { schema: z.object({
-      name: z.string(),
-      email: z.string().optional(),
-      phone: z.string().optional(),
-      title: z.string().optional(),
-      color: z.string().optional(),
-    }) } } },
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({
+            name: z.string(),
+            email: z.string().optional(),
+            phone: z.string().optional(),
+            title: z.string().optional(),
+            color: z.string().optional(),
+          })
+        }
+      }
+    },
   },
   responses: { 201: { description: "Created", content: { "application/json": { schema: z.object({ staff: StaffSchema }) } } } },
 });
@@ -872,14 +910,20 @@ const updateStaff = createRoute({
   path: "/api/staff/{id}",
   request: {
     params: IdParam,
-    body: { content: { "application/json": { schema: z.object({
-      name: z.string().optional(),
-      email: z.string().optional(),
-      phone: z.string().optional(),
-      title: z.string().optional(),
-      color: z.string().optional(),
-      active: z.number().int().optional(),
-    }) } } },
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({
+            name: z.string().optional(),
+            email: z.string().optional(),
+            phone: z.string().optional(),
+            title: z.string().optional(),
+            color: z.string().optional(),
+            active: z.number().int().optional(),
+          })
+        }
+      }
+    },
   },
   responses: { 200: { description: "Updated", content: { "application/json": { schema: OkSchema } } } },
 });
@@ -933,14 +977,20 @@ const createService = createRoute({
   method: "post",
   path: "/api/services",
   request: {
-    body: { content: { "application/json": { schema: z.object({
-      name: z.string(),
-      description: z.string().optional(),
-      duration: z.number().int().optional(),
-      price: z.number().optional(),
-      color: z.string().optional(),
-      category: z.string().optional(),
-    }) } } },
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({
+            name: z.string(),
+            description: z.string().optional(),
+            duration: z.number().int().optional(),
+            price: z.number().optional(),
+            color: z.string().optional(),
+            category: z.string().optional(),
+          })
+        }
+      }
+    },
   },
   responses: { 201: { description: "Created", content: { "application/json": { schema: z.object({ service: ServiceSchema }) } } } },
 });
@@ -960,15 +1010,21 @@ const updateService = createRoute({
   path: "/api/services/{id}",
   request: {
     params: IdParam,
-    body: { content: { "application/json": { schema: z.object({
-      name: z.string().optional(),
-      description: z.string().optional(),
-      duration: z.number().int().optional(),
-      price: z.number().optional(),
-      color: z.string().optional(),
-      category: z.string().optional(),
-      active: z.number().int().optional(),
-    }) } } },
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({
+            name: z.string().optional(),
+            description: z.string().optional(),
+            duration: z.number().int().optional(),
+            price: z.number().optional(),
+            color: z.string().optional(),
+            category: z.string().optional(),
+            active: z.number().int().optional(),
+          })
+        }
+      }
+    },
   },
   responses: { 200: { description: "Updated", content: { "application/json": { schema: OkSchema } } } },
 });
@@ -1006,16 +1062,22 @@ const createBlockedSlot = createRoute({
   method: "post",
   path: "/api/blocked-slots",
   request: {
-    body: { content: { "application/json": { schema: z.object({
-      staff_id: z.number().int(),
-      blocked_date: z.string(),
-      start_time: z.string(),
-      end_time: z.string(),
-      reason: z.string().optional(),
-      allow_conflict: z.boolean().optional().openapi({
-        description: "Block the time even though it overlaps an appointment or another blocked slot.",
-      }),
-    }) } } },
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({
+            staff_id: z.number().int(),
+            blocked_date: z.string(),
+            start_time: z.string(),
+            end_time: z.string(),
+            reason: z.string().optional(),
+            allow_conflict: z.boolean().optional().openapi({
+              description: "Block the time even though it overlaps an appointment or another blocked slot.",
+            }),
+          })
+        }
+      }
+    },
   },
   responses: {
     201: { description: "Created", content: { "application/json": { schema: OkSchema } } },
@@ -1111,16 +1173,22 @@ const createProduct = createRoute({
   method: "post",
   path: "/api/products",
   request: {
-    body: { content: { "application/json": { schema: z.object({
-      name: z.string(),
-      brand: z.string().optional(),
-      category: z.string().optional(),
-      sku: z.string().optional(),
-      price: z.number().min(0).optional(),
-      cost: z.number().min(0).optional(),
-      stock: z.number().int().min(0).optional(),
-      low_stock_alert: z.number().int().min(0).optional(),
-    }) } } },
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({
+            name: z.string(),
+            brand: z.string().optional(),
+            category: z.string().optional(),
+            sku: z.string().optional(),
+            price: z.number().min(0).optional(),
+            cost: z.number().min(0).optional(),
+            stock: z.number().int().min(0).optional(),
+            low_stock_alert: z.number().int().min(0).optional(),
+          })
+        }
+      }
+    },
   },
   responses: { 201: { description: "Created", content: { "application/json": { schema: z.object({ product: ProductSchema }) } } } },
 });
@@ -1141,16 +1209,22 @@ const updateProduct = createRoute({
   path: "/api/products/{id}",
   request: {
     params: IdParam,
-    body: { content: { "application/json": { schema: z.object({
-      name: z.string().optional(),
-      brand: z.string().optional(),
-      category: z.string().optional(),
-      sku: z.string().optional(),
-      price: z.number().min(0).optional(),
-      cost: z.number().min(0).optional(),
-      stock: z.number().int().min(0).optional(),
-      low_stock_alert: z.number().int().min(0).optional(),
-    }) } } },
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({
+            name: z.string().optional(),
+            brand: z.string().optional(),
+            category: z.string().optional(),
+            sku: z.string().optional(),
+            price: z.number().min(0).optional(),
+            cost: z.number().min(0).optional(),
+            stock: z.number().int().min(0).optional(),
+            low_stock_alert: z.number().int().min(0).optional(),
+          })
+        }
+      }
+    },
   },
   responses: { 200: { description: "Updated", content: { "application/json": { schema: OkSchema } } } },
 });

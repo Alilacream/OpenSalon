@@ -25,5 +25,13 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
+    watch: {
+      ignored: [
+        '**/.wrangler/**',
+        '**/*.sqlite',
+        '**/*.sqlite-wal',
+        '**/*.sqlite-shm',
+      ]
+    }
   },
 });
